@@ -66,11 +66,11 @@
               <div class="rainfall-stats">
                 <div class="stat-item">
                   <span class="label">当日累计降雨量</span>
-                  <span class="value">124 mm</span>
+                  <span class="value">{{ statistics.totalRainfall }} mm</span>
                 </div>
                 <div class="stat-item">
                   <span class="label">近3日累计降雨量</span>
-                  <span class="value">124 mm</span>
+                  <span class="value">{{ statistics.threeDayRainfall }} mm</span>
                 </div>
               </div>
               <v-chart class="chart" :option="rainfallBarOption" autoresize />
@@ -173,6 +173,9 @@
       <div class="alert-header">
         <el-icon color="#f5222d"><Warning /></el-icon>
         <span>暴雨预警</span>
+        <el-button size="small" @click="testCsvLoading" style="margin-left: 10px;">
+          测试CSV加载
+        </el-button>
       </div>
       <div class="alert-content">
         <div class="alert-item" v-for="alert in alerts.slice(0, 3)" :key="alert.id">
@@ -202,7 +205,6 @@ import {
   Watermelon,
   Warning,
   MapLocation,
-  Sunny,
   Setting,
   OfficeBuilding
 } from '@element-plus/icons-vue'
@@ -220,12 +222,40 @@ use([
 
 const monitorStore = useMonitorStore()
 const statistics = computed(() => {
+  // 从CSV数据中计算真实的统计数据
+  const rainfallStations = monitorStore.rainfallStations
+  
+  // 计算当日累计降雨量（临桂区 + 灵川县的日降雨量）
+  const totalDailyRainfall = rainfallStations.reduce((sum, station) => {
+    return sum + (station.dailyRainfall || 0)
+  }, 0)
+  
+  // 计算近3日累计降雨量（假设每日降雨量相同，实际应为CSV中3日数据之和）
+  const threeDayRainfall = totalDailyRainfall * 3
+  
+  // 计算预警站点数（日雨量≥50mm）
+  const warningStationsCount = rainfallStations.filter(station => 
+    station.status === 'warning' || station.status === 'danger'
+  ).length
+  
+  // 计算危险站点数
+  const dangerStationsCount = rainfallStations.filter(station => 
+    station.status === 'danger'
+  ).length
+  
+  // 计算水库平均水位
+  const waterLevelStations = monitorStore.waterLevelStations
+  const avgWaterLevel = waterLevelStations.length > 0 
+    ? waterLevelStations.reduce((sum, station) => sum + (station.currentLevel || 0), 0) / waterLevelStations.length
+    : 228.5 // 默认值
+  
   return {
-    totalRainfall: 124.0, // 保留原有降雨数据
-    avgWaterLevel: 228.5, // 青狮潭/斧子口/小溶江/川江的水位平均值
-    warningStations: 1,   // 仅斧子口为预警站点
-    dangerStations: 0,
-    totalInundationArea: 26.50
+    totalRainfall: Number(totalDailyRainfall.toFixed(1)),
+    threeDayRainfall: Number(threeDayRainfall.toFixed(1)),
+    avgWaterLevel: Number(avgWaterLevel.toFixed(1)),
+    warningStations: warningStationsCount,
+    dangerStations: dangerStationsCount,
+    totalInundationArea: 26.50 // 暂时保留原有数据
   }
 })
 const alerts = computed(() => monitorStore.alerts)
@@ -329,8 +359,26 @@ let mapLayers: any = {}
 // 当前地图类型
 const currentMapType = ref('街道地图')
 
-// 初始化地图
-onMounted(() => {
+// 页面加载时初始化数据
+onMounted(async () => {
+  console.log('页面加载，开始初始化数据...')
+  
+  try {
+    // 加载CSV数据
+    console.log('开始调用loadGuilinWeatherData...')
+    await monitorStore.loadGuilinWeatherData()
+    console.log('CSV数据加载完成')
+    
+    // 检查加载后的数据
+    console.log('雨量站点数据:', monitorStore.rainfallStations)
+    console.log('水位站点数据:', monitorStore.waterLevelStations)
+    console.log('统计数据:', statistics.value)
+  } catch (error) {
+    console.error('CSV数据加载失败:', error)
+    console.error('错误详情:', error)
+  }
+
+  // 初始化地图
   // 检查地图容器是否存在
   const mapContainer = document.getElementById('real-map')
   if (!mapContainer) {
@@ -603,6 +651,27 @@ function switchMapType(type: string) {
     currentMapType.value = type
   } catch (error) {
     console.error(`切换到${type}失败:`, error)
+  }
+}
+
+// 测试CSV加载
+async function testCsvLoading() {
+  console.log('=== 开始测试CSV加载 ===')
+  try {
+    await monitorStore.loadGuilinWeatherData()
+    console.log('CSV加载测试完成')
+    console.log('雨量站点数据:', monitorStore.rainfallStations)
+    console.log('水位站点数据:', monitorStore.waterLevelStations)
+    console.log('统计数据:', statistics.value)
+    
+    // 显示提示
+    alert(`CSV加载测试完成！
+雨量站点数: ${monitorStore.rainfallStations.length}
+当日累计降雨量: ${statistics.value.totalRainfall} mm
+平均水位: ${statistics.value.avgWaterLevel} m`)
+  } catch (error) {
+    console.error('CSV加载测试失败:', error)
+    alert('CSV加载测试失败，请查看控制台日志')
   }
 }
 

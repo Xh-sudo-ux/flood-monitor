@@ -53,7 +53,7 @@
       <el-col :xs="24" :lg="12">
         <div class="chart-card">
           <div class="card-header">
-            <span class="card-title">面积统计</span>
+            <span class="card-title">实时内涝区域面积统计图表</span>
           </div>
           <div class="chart-body">
             <v-chart class="chart" :option="areaChartOption" autoresize />
@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, PieChart } from 'echarts/charts'
@@ -137,6 +137,7 @@ import {
 import VChart from 'vue-echarts'
 import { Warning, User, MapLocation, TrendCharts } from '@element-plus/icons-vue'
 import { useMonitorStore } from '@/stores/monitor'
+import { FloodMonitorAPI } from '@/services/FloodMonitorAPI'
 
 use([
   CanvasRenderer,
@@ -150,6 +151,45 @@ use([
 
 const monitorStore = useMonitorStore()
 const inundationAreas = computed(() => monitorStore.inundationAreas)
+const api = new FloodMonitorAPI()
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// 加载实时内涝区域数据
+const loadInundationData = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    const response = await api.getInundationAreas()
+    
+    if (response.code === 200) {
+      // 转换API数据格式为store需要的格式
+      const areas = response.data.areas.map((area: any) => ({
+        id: area.id,
+        name: area.name,
+        area: area.area_km2,
+        depth: area.depth_m,
+        affectedPopulation: area.affected_population,
+        startTime: area.detected_time,
+        status: area.status
+      }))
+      
+      // 更新store数据
+      monitorStore.setInundationAreas(areas)
+    }
+  } catch (err: any) {
+    error.value = err.message || '加载内涝区域数据失败'
+    console.error('加载内涝区域数据失败:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadInundationData()
+})
 
 // 统计数据
 const totalInundationArea = computed(() => {

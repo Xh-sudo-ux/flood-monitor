@@ -221,78 +221,107 @@ const warningStations = computed(() => {
   return monitorStore.rainfallStations.filter(s => s.dailyRainfall > 50).length
 })
 
-// 雨量等级分类
+// 雨量等级分类 - 针对桂林市雨量数据调整
 const getRainfallClass = (value: number) => {
-  if (value >= 50) return 'danger'
-  if (value >= 25) return 'warning'
-  if (value >= 10) return 'normal'
-  return 'low'
+  if (value >= 50) return 'danger'      // 暴雨
+  if (value >= 25) return 'warning'     // 大雨
+  if (value >= 10) return 'normal'      // 中雨
+  if (value >= 2.5) return 'light'      // 小雨
+  return 'low'                          // 微量或无雨
 }
 
 // 雨量柱状图配置
-const rainfallChartOption = computed(() => ({
-  backgroundColor: 'transparent',
-  tooltip: {
-    trigger: 'axis',
-    backgroundColor: 'rgba(22, 32, 53, 0.9)',
-    borderColor: '#1e3a5f',
-    textStyle: { color: '#fff' },
-    axisPointer: { type: 'shadow' }
-  },
-  grid: {
-    left: '3%',
-    right: '4%',
-    bottom: '10%',
-    top: '10%',
-    containLabel: true
-  },
-  dataZoom: [{
-    type: 'inside',
-    start: 0,
-    end: 50
-  }, {
-    type: 'slider',
-    start: 0,
-    end: 50,
-    height: 20,
-    bottom: 0,
-    borderColor: '#1e3a5f',
-    fillerColor: 'rgba(13, 115, 119, 0.3)',
-    handleStyle: { color: '#00d9ff' },
-    textStyle: { color: '#a8b5c8' }
-  }],
-  xAxis: {
-    type: 'category',
-    data: monitorStore.rainfallStations.map(s => s.name),
-    axisLine: { lineStyle: { color: '#1e3a5f' } },
-    axisLabel: { color: '#a8b5c8', rotate: 45, fontSize: 10 }
-  },
-  yAxis: {
-    type: 'value',
-    name: '雨量(mm)',
-    nameTextStyle: { color: '#a8b5c8' },
-    axisLine: { lineStyle: { color: '#1e3a5f' } },
-    axisLabel: { color: '#a8b5c8' },
-    splitLine: { lineStyle: { color: '#1e3a5f', type: 'dashed' } }
-  },
-  series: [{
-    name: timeRange.value === 'hour' ? '小时雨量' : '日雨量',
-    type: 'bar',
-    data: monitorStore.rainfallStations.map(s => 
-      timeRange.value === 'hour' ? s.hourlyRainfall : s.dailyRainfall
-    ),
-    itemStyle: {
-      color: (params: any) => {
-        const value = params.value
-        if (value >= 50) return '#f5222d'
-        if (value >= 25) return '#faad14'
-        if (value >= 10) return '#00d9ff'
-        return '#52c41a'
+  const rainfallChartOption = computed(() => {
+    const stations = monitorStore.rainfallStations
+    const isHourly = timeRange.value === 'hour'
+    
+    // 调试日志
+    console.log('雨量站点数据:', stations)
+    console.log('当前类型:', isHourly ? '小时' : '日')
+    console.log('雨量数据:', stations.map(s => isHourly ? s.hourlyRainfall : s.dailyRainfall))
+    
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(22, 32, 53, 0.9)',
+        borderColor: '#1e3a5f',
+        textStyle: { color: '#fff' },
+        axisPointer: { type: 'shadow' },
+        formatter: (params: any) => {
+          const param = params[0]
+          const station = stations[param.dataIndex]
+          const value = param.value
+          return `${station.name}<br/>${isHourly ? '小时' : '日'}雨量: ${value.toFixed(2)}mm`
+        }
       },
-      borderRadius: [4, 4, 0, 0]
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '10%',
+        top: '10%',
+        containLabel: true
+      },
+      dataZoom: [{
+        type: 'inside',
+        start: 0,
+        end: 50
+      }, {
+        type: 'slider',
+        start: 0,
+        end: 50,
+        height: 20,
+        bottom: 0,
+        borderColor: '#1e3a5f',
+        fillerColor: 'rgba(13, 115, 119, 0.3)',
+        handleStyle: { color: '#00d9ff' },
+        textStyle: { color: '#a8b5c8' }
+      }],
+      xAxis: {
+        type: 'category',
+        data: stations.map(s => s.name),
+        axisLine: { lineStyle: { color: '#1e3a5f' } },
+        axisLabel: { color: '#a8b5c8', rotate: 45, fontSize: 10 }
+      },
+      yAxis: {
+        type: 'value',
+        name: '雨量(mm)',
+        nameTextStyle: { color: '#a8b5c8' },
+        axisLine: { lineStyle: { color: '#1e3a5f' } },
+        axisLabel: { color: '#a8b5c8' },
+        splitLine: { lineStyle: { color: '#1e3a5f', type: 'dashed' } },
+        min: 0,
+        max: function(value: any) {
+          // 动态设置Y轴最大值，确保所有数据都能显示
+          const maxValue = Math.max(...stations.map(s => isHourly ? s.hourlyRainfall : s.dailyRainfall))
+          return Math.max(maxValue * 1.2, 5) // 至少显示5mm
+        }
+      },
+      series: [{
+        name: isHourly ? '小时雨量' : '日雨量',
+        type: 'bar',
+        data: stations.map(s => isHourly ? s.hourlyRainfall : s.dailyRainfall),
+        label: {
+          show: true,
+          position: 'top',
+          formatter: (params: any) => {
+            return params.value.toFixed(2) + 'mm'
+          }
+        },
+        itemStyle: {
+          color: (params: any) => {
+            const value = params.value
+            if (value >= 50) return '#f5222d'    // 暴雨 - 红色
+            if (value >= 25) return '#faad14'    // 大雨 - 橙色
+            if (value >= 10) return '#00d9ff'    // 中雨 - 青色
+            if (value >= 2.5) return '#a0d911'   // 小雨 - 浅绿色
+            return '#52c41a'                     // 微量或无雨 - 绿色
+          },
+          borderRadius: [4, 4, 0, 0]
+        }
+      }]
     }
-  }]
-}))
+  })
 
 // 雨量饼图配置
 const rainfallPieOption = computed(() => {
@@ -624,6 +653,10 @@ const velocityChartOption = computed(() => ({
 
       .normal {
         color: #00d9ff;
+      }
+
+      .light {
+        color: #a0d911;
       }
 
       .low {

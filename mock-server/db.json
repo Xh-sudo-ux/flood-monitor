@@ -1,0 +1,179 @@
+{
+  "inundation_areas": [
+    {
+      "id": "nanning_south_001",
+      "name": "南宁市南部区域",
+      "area_km2": 12.5,
+      "depth_m": 1.2,
+      "affected_population": 3500,
+      "coordinates": {
+        "type": "Polygon",
+        "coordinates": [[[108.1, 22.8], [108.2, 22.7], [108.15, 22.65], [108.1, 22.8]]]
+      },
+      "status": "active",
+      "severity": "high",
+      "detected_time": "2024-03-22T08:30:00+08:00",
+      "updated_time": "2024-03-22T14:25:00+08:00",
+      "data_source": "satellite_sentinel1",
+      "confidence": 0.92
+    },
+    {
+      "id": "liuzhou_east_002",
+      "name": "柳州市东部区域",
+      "area_km2": 8.3,
+      "depth_m": 0.8,
+      "affected_population": 2100,
+      "coordinates": {
+        "type": "Polygon",
+        "coordinates": [[[109.4, 24.3], [109.5, 24.2], [109.45, 24.15], [109.4, 24.3]]]
+      },
+      "status": "warning",
+      "severity": "medium",
+      "detected_time": "2024-03-22T10:15:00+08:00",
+      "updated_time": "2024-03-22T14:20:00+08:00",
+      "data_source": "drone_survey",
+      "confidence": 0.85
+    },
+    {
+      "id": "guilin_west_003",
+      "name": "桂林市西部区域",
+      "area_km2": 5.7,
+      "depth_m": 0.5,
+      "affected_population": 1200,
+      "coordinates": {
+        "type": "Polygon",
+        "coordinates": [[[110.1, 25.2], [110.2, 25.1], [110.15, 25.05], [110.1, 25.2]]]
+      },
+      "status": "subsided",
+      "severity": "low",
+      "detected_time": "2024-03-21T16:45:00+08:00",
+      "updated_time": "2024-03-22T09:10:00+08:00",
+      "data_source": "ground_sensor",
+      "confidence": 0.78
+    }
+  ],
+  "rainfall_stations": [
+    {
+      "station_id": "GL001",
+      "name": "临桂区监测站",
+      "location": {
+        "latitude": 25.2741,
+        "longitude": 110.2704
+      },
+      "rainfall_1h": 0.5,
+      "rainfall_3h": 1.2,
+      "rainfall_6h": 2.1,
+      "rainfall_12h": 3.8,
+      "rainfall_24h": 6.5,
+      "rainfall_today": 0.96,
+      "warning_level": "normal",
+      "update_time": "2024-03-22T14:25:00+08:00"
+    },
+    {
+      "station_id": "GL002",
+      "name": "灵川县监测站",
+      "location": {
+        "latitude": 25.4125,
+        "longitude": 110.3256
+      },
+      "rainfall_1h": 0.8,
+      "rainfall_3h": 2.1,
+      "rainfall_6h": 3.5,
+      "rainfall_12h": 5.2,
+      "rainfall_24h": 8.7,
+      "rainfall_today": 1.24,
+      "warning_level": "warning",
+      "update_time": "2024-03-22T14:28:00+08:00"
+    }
+  ],
+  "reservoirs": [
+    {
+      "reservoir_id": "LY001",
+      "name": "漓江上游水库",
+      "location": {
+        "latitude": 25.5123,
+        "longitude": 110.1234
+      },
+      "current_level": 242.5,
+      "warning_level": 245.0,
+      "danger_level": 248.0,
+      "capacity_percentage": 78.5,
+      "inflow_rate": 120.5,
+      "outflow_rate": 115.2,
+      "update_time": "2024-03-22T14:30:00+08:00"
+    }
+  ],
+  "flood_extraction_images": [
+    {
+      "image_id": "img_001",
+      "filename": "nanning_sentinel2_20240322.tif",
+      "file_size": 5242880,
+      "image_type": "sentinel2",
+      "dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "bands": 13
+      },
+      "upload_time": "2024-03-22T14:30:00+08:00",
+      "metadata": {
+        "region": "南宁市",
+        "acquisition_date": "2024-03-22",
+        "coordinate_system": "WGS84",
+        "resolution": "10m"
+      },
+      "uploaded_by": "admin"
+    }
+  ],
+  "flood_extraction_tasks": [
+    {
+      "task_id": "task_001",
+      "image_id": "img_001",
+      "method": "threshold",
+      "parameters": {
+        "threshold_value": 0.5,
+        "band_combination": ["B8", "B11", "B12"],
+        "water_index": "NDWI"
+      },
+      "status": "completed",
+      "progress": 100,
+      "start_time": "2024-03-22T14:30:00+08:00",
+      "end_time": "2024-03-22T14:32:00+08:00",
+      "result": {
+        "extracted_area_km2": 12.5,
+        "water_pixels": 125000,
+        "confidence": 0.92,
+        "statistics": {
+          "total_area_km2": 12.5,
+          "largest_patch_km2": 8.3,
+          "average_confidence": 0.92,
+          "pixel_count": 125000,
+          "water_ratio": 0.125
+        }
+      },
+      "created_by": "admin"
+    }
+  ],
+  "flood_extraction_results": [
+    {
+      "task_id": "task_001",
+      "result_data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[108.1, 22.8], [108.2, 22.7], [108.15, 22.65], [108.1, 22.8]]]
+            },
+            "properties": {
+              "area_km2": 12.5,
+              "perimeter_km": 15.2,
+              "confidence": 0.92,
+              "water_depth": 1.2
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

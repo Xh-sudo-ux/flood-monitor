@@ -7,16 +7,12 @@ export const useMonitorStore = defineStore('monitor', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  // 雨量监测站点数据
+  // 雨量监测站点数据 - 桂林市四个主要监测站点
   const rainfallStations = ref<RainfallStation[]>([
-    { id: 1, name: '南宁', lat: 22.82, lng: 108.32, hourlyRainfall: 12.5, dailyRainfall: 45.2, status: 'normal', updateTime: new Date() },
-    { id: 2, name: '柳州', lat: 24.33, lng: 109.40, hourlyRainfall: 8.3, dailyRainfall: 32.1, status: 'normal', updateTime: new Date() },
-    { id: 3, name: '桂林', lat: 25.27, lng: 110.29, hourlyRainfall: 15.7, dailyRainfall: 58.4, status: 'warning', updateTime: new Date() },
-    { id: 4, name: '梧州', lat: 23.48, lng: 111.28, hourlyRainfall: 5.2, dailyRainfall: 28.9, status: 'normal', updateTime: new Date() },
-    { id: 5, name: '北海', lat: 21.48, lng: 109.12, hourlyRainfall: 22.1, dailyRainfall: 78.3, status: 'danger', updateTime: new Date() },
-    { id: 6, name: '防城港', lat: 21.61, lng: 108.35, hourlyRainfall: 10.8, dailyRainfall: 41.2, status: 'normal', updateTime: new Date() },
-    { id: 7, name: '钦州', lat: 21.97, lng: 108.62, hourlyRainfall: 18.4, dailyRainfall: 62.7, status: 'warning', updateTime: new Date() },
-    { id: 8, name: '玉林', lat: 22.64, lng: 110.17, hourlyRainfall: 7.6, dailyRainfall: 29.5, status: 'normal', updateTime: new Date() }
+    { id: 1, name: '临桂区', lat: 25.2741, lng: 110.2704, hourlyRainfall: 0.5, dailyRainfall: 0.96, status: 'normal', updateTime: new Date() },
+    { id: 2, name: '灵川县', lat: 25.4125, lng: 110.3256, hourlyRainfall: 0.8, dailyRainfall: 1.24, status: 'warning', updateTime: new Date() },
+    { id: 3, name: '阳朔县', lat: 24.7785, lng: 110.4966, hourlyRainfall: 1.2, dailyRainfall: 2.15, status: 'normal', updateTime: new Date() },
+    { id: 4, name: '全州县', lat: 25.9299, lng: 111.0729, hourlyRainfall: 0.3, dailyRainfall: 0.78, status: 'normal', updateTime: new Date() }
   ])
 
   // 水位监测站点数据
@@ -528,6 +524,11 @@ export const useMonitorStore = defineStore('monitor', () => {
     }
   }
 
+  // 设置内涝区域数据
+  function setInundationAreas(areas: InundationArea[]) {
+    inundationAreas.value = areas
+  }
+
   return {
     loading,
     error,
@@ -540,6 +541,7 @@ export const useMonitorStore = defineStore('monitor', () => {
     statistics,
     guilinWeatherData,
     initData,
-    loadGuilinWeatherData
+    loadGuilinWeatherData,
+    setInundationAreas
   }
 })
